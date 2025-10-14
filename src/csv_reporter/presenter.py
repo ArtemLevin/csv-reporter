@@ -7,11 +7,13 @@ Presentation helpers (tabular output) for CSV Rating Reporter.
 
 Публичное API:
 - class TablePresenter:
-    - render_brand_stats(rows, sort_by="avg_rating", descending=True, limit=None) -> str
+    - render_brand_stats(rows, sort_by="avg_rating", descending=True, limit=None, tablefmt="github") -> str
 
 Политики:
 - Используем `tabulate` для вывода таблицы (минимальная зависимость по SRS).
 - Округление среднего рейтинга до 2 знаков — компромисс читаемости.
+- Важно: передаём `disable_numparse=True`, чтобы tabulate НЕ превращал строки `"4.00"` обратно в числа `4`,
+  иначе теряются нули после запятой (это ломало тест, ожидающий «4.00»).
 """
 
 from __future__ import annotations
@@ -71,14 +73,18 @@ class TablePresenter:
         table: List[Tuple[str, str, int]] = []
 
         for r in ordered:
-            # Округляем средний рейтинг до 2 знаков для компактности
+            # Округляем средний рейтинг до 2 знаков для компактности и ПРИНУДИТЕЛЬНО
+            # сохраняем строкой, чтобы не потерять нули при табулировании.
             avg_display = f"{r.avg_rating:.2f}"
-            # Добавляем строку для табличного вывода
             table.append((r.brand, avg_display, r.items))
 
-        # Примечание: формат "github" даёт читаемую моноширинную таблицу,
-        # легко тестируется по подстрокам.
-        return tabulate(table, headers=headers, tablefmt=tablefmt)
+        # disable_numparse=True — критично для сохранения строкового представления "4.00"
+        return tabulate(
+            table,
+            headers=headers,
+            tablefmt=tablefmt,
+            disable_numparse=True,  # не пытайся распарсить "4.00" обратно в число 4
+        )
 
     # ----------------------- internal helpers -----------------------
 
