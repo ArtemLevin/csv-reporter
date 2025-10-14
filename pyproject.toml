@@ -22,6 +22,7 @@ Homepage = "https://example.com/csv-rating-reporter"
 Repository = "https://example.com/csv-rating-reporter/repo"
 
 [project.scripts]
+# Точка входа CLI: пользователь вызывает `csvreporter`
 csvreporter = "csv_reporter.cli:main"
 
 [tool.setuptools.packages.find]
@@ -29,7 +30,9 @@ where = ["src"]
 include = ["csv_reporter*"]
 
 
+
 [tool.ruff]
+# Ruff — основной линтер/форматтер; flake8 оставляем для совместимости с CI
 target-version = "py39"
 line-length = 100
 extend-include = ["src", "tests"]
@@ -37,16 +40,16 @@ extend-include = ["src", "tests"]
 [tool.ruff.lint]
 select = [
   "E", "F",        # базовые ошибки pycodestyle/pyflakes
-  "I",             # isort упорядочивание импортов
-  "D",             # pydocstyle (докстринги по PEP-257)
+  "I",             # isort
+  "D",             # pydocstyle (PEP-257)
   "W",             # предупреждения
-  "UP",            # pyupgrade (современный стиль)
-  "B",             # bugbear (подозрительные конструкции)
-  "S",             # flake8-bandit (базовые проверки безопасности)
+  "UP",            # pyupgrade
+  "B",             # bugbear
+  "S",             # bandit (базовые проверки безопасности)
 ]
 ignore = [
-  "D105", # допускаем отсутствие докстринга у магических методов, если они очевидны
-  "D107", # допускаем отсутствие докстринга у __init__, если класс самодокументируем
+  "D105", # допускаем отсутствие докстринга у магических методов
+  "D107", # допускаем отсутствие докстринга у __init__
 ]
 
 [tool.ruff.format]
@@ -60,12 +63,11 @@ extend-ignore = [
   "D107",
 ]
 per-file-ignores = [
-  # Тестам позволяем чуть более вольный стиль
   "tests/*:D",
 ]
 
+
 [tool.mypy]
-# Стремимся к строгой проверке, но допускаем упрощения для CSV-парсинга (где много str -> number конверсий)
 python_version = "3.9"
 packages = ["csv_reporter"]
 ignore_missing_imports = false
@@ -79,7 +81,9 @@ no_implicit_optional = true
 strict_equality = true
 pretty = true
 
-[mypy-tests.*]
+# Для тестов смягчаем требования корректным способом (валидный TOML):
+[[tool.mypy.overrides]]
+module = ["tests.*"]
 disallow_untyped_defs = false
 check_untyped_defs = false
 
@@ -106,6 +110,7 @@ source = ["src/csv_reporter"]
 omit = [
   "src/csv_reporter/__init__.py",
 ]
+
 [tool.coverage.report]
 fail_under = 80
 show_missing = true
@@ -125,4 +130,3 @@ dev = [
   "mypy>=1.8",
   "ruff>=0.5",
 ]
-
