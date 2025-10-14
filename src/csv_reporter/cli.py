@@ -14,7 +14,7 @@ Command-line interface for CSV Rating Reporter.
 - --report NAME — имя отчёта (по умолчанию: "average-rating").
 - --sort {brand,avg_rating,items} — поле сортировки вывода (по умолчанию avg_rating).
 - --limit N — ограничение числа строк (опционально).
-- --tablefmt FMT — формат вывода tabulate (github|simple|plain|grid|fancy_grid|psql|tsv).
+- --tablefmt {github,simple,plain,grid,fancy_grid,psql,tsv} — формат таблицы (по умолчанию github).
 - --debug — подробные логи на stderr.
 - --version — вывести версию и завершить.
 
@@ -31,15 +31,15 @@ from typing import List, Optional
 
 from . import __version__
 from .csv_reader import CSVReader
-from .errors import CliError, CsvReporterError
+from .errors import CsvReporterError
 from .logging_utils import get_logger, set_up_logging
 from .presenter import SortField, TablePresenter
 from .reports.registry import get_default_registry
 
 _LOG = get_logger(__name__)
 
-# Разрешённые форматы табличного вывода (ограниченный whitelisting для предсказуемости UX)
-_ALLOWED_TABLEFMTS = (
+# Поддерживаемый набор форматов tabulate — достаточно для большинства окружений и тестов.
+_SUPPORTED_TABLEFMTS = (
     "github",
     "simple",
     "plain",
@@ -65,7 +65,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--files",
         metavar="FILE",
         nargs="+",
-        required=False,  # проверим вручную, чтобы контролировать формат ошибки
+        required=False,  # проверим вручную, чтобы выдать наш формат ошибки
         help="Paths to CSV files to read (at least one).",
     )
     parser.add_argument(
@@ -87,9 +87,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--tablefmt",
-        choices=_ALLOWED_TABLEFMTS,
+        choices=_SUPPORTED_TABLEFMTS,
         default="github",
-        help=f"Tabulate format for output (default: github). Allowed: {', '.join(_ALLOWED_TABLEFMTS)}.",
+        help="Tabular output format (tabulate). Default: github.",
     )
     parser.add_argument(
         "--debug",
@@ -125,13 +125,13 @@ def run(argv: Optional[List[str]] = None) -> int:
     # Настраиваем логирование как можно раньше.
     set_up_logging(debug=bool(args.debug))
 
-    # Валидация наличия файлов
+    # Валидация наличия файлов здесь (даём консистентный формат ошибки CLI).
     files: Optional[List[str]] = args.files
     if not files:
         _emit_error("No input files provided. Use --files FILE [FILE ...].")
         return 1
 
-    sort_by: SortField = args.sort  # Literal-сигнатура дополнительно контролируется presenter'ом.
+    sort_by: SortField = args.sort  # Literal на стороне presenter ещё раз ограничит значения.
     limit: Optional[int] = args.limit
     if limit is not None and limit < 0:
         _emit_error("--limit must be >= 0")
@@ -153,20 +153,19 @@ def run(argv: Optional[List[str]] = None) -> int:
         # 3) Форматируем и печатаем таблицу
         presenter = TablePresenter()
         table = presenter.render_brand_stats(
-            stats, sort_by=sort_by, descending=True, limit=limit, tablefmt=tablefmt
+            stats,
+            sort_by=sort_by,
+            descending=True,
+            limit=limit,
+            tablefmt=tablefmt,
         )
         print(table)
         return 0
 
-    except CsvReporterError as err:
-        # Единообразные ошибки домена/CLI
-        _emit_error(str(err))
-        return 1
-    except (FileNotFoundError, PermissionError, IsADirectoryError) as err:
+    except (FileNotFoundError, PermissionError, IsADirectoryError, CsvReporterError) as err:
         _emit_error(str(err))
         return 1
     except Exception as err:  # крайний перехват на случай непредвиденных ошибок
-        # В debug-режиме полезно видеть traceback, но по требованиям выводим короткое сообщение.
         _LOG.exception("Unhandled error")  # в логи уходит traceback
         _emit_error(f"Unexpected error: {err}")
         return 1
@@ -189,5 +188,8 @@ def main() -> None:
     Ничего не возвращает — завершает процесс соответствующим кодом.
     """
     code = run()
-    # Явно завершаем процесс — стандартный приём для CLI.
     raise SystemExit(code)
+
+
+if __name__ == "__main__":
+    main()
