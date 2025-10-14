@@ -1,0 +1,128 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "csv-rating-reporter"
+version = "1.0.0"
+description = "CLI-утилита для консолидации CSV и отчёта среднего рейтинга по брендам"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Your Team", email = "team@example.com" }
+]
+keywords = ["csv", "cli", "report", "tabulate", "ratings"]
+dependencies = [
+  "tabulate>=0.9.0,<1.0.0",
+]
+
+[project.urls]
+Homepage = "https://example.com/csv-rating-reporter"
+Repository = "https://example.com/csv-rating-reporter/repo"
+
+[project.scripts]
+csvreporter = "csv_reporter.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["csv_reporter*"]
+
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+extend-include = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F",        # базовые ошибки pycodestyle/pyflakes
+  "I",             # isort упорядочивание импортов
+  "D",             # pydocstyle (докстринги по PEP-257)
+  "W",             # предупреждения
+  "UP",            # pyupgrade (современный стиль)
+  "B",             # bugbear (подозрительные конструкции)
+  "S",             # flake8-bandit (базовые проверки безопасности)
+]
+ignore = [
+  "D105", # допускаем отсутствие докстринга у магических методов, если они очевидны
+  "D107", # допускаем отсутствие докстринга у __init__, если класс самодокументируем
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.flake8]
+# Поддерживаем flake8 для совместимости с CI, но основная проверка — ruff.
+max-line-length = 100
+extend-ignore = [
+  "D105",
+  "D107",
+]
+per-file-ignores = [
+  # Тестам позволяем чуть более вольный стиль
+  "tests/*:D",
+]
+
+[tool.mypy]
+# Стремимся к строгой проверке, но допускаем упрощения для CSV-парсинга (где много str -> number конверсий)
+python_version = "3.9"
+packages = ["csv_reporter"]
+ignore_missing_imports = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_equality = true
+pretty = true
+
+[mypy-tests.*]
+disallow_untyped_defs = false
+check_untyped_defs = false
+
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = """
+  -q
+  --strict-markers
+  --disable-warnings
+  --cov=csv_reporter
+  --cov-report=term-missing
+"""
+filterwarnings = [
+  "error::DeprecationWarning",
+  "ignore:Coverage disabled:UserWarning",
+]
+
+
+[tool.coverage.run]
+branch = true
+source = ["src/csv_reporter"]
+omit = [
+  "src/csv_reporter/__init__.py",
+]
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+
+[tool.ruff.lint.isort]
+known-first-party = ["csv_reporter"]
+force-sort-within-sections = true
+combine-as-imports = true
+
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "pytest-cov>=4.0",
+  "mypy>=1.8",
+  "ruff>=0.5",
+]
+
