@@ -146,8 +146,7 @@ class CSVReader:
             actual = by_lower.get(required)
             if not actual:
                 raise SchemaError(
-                    f"Required column '{required}' not found in {path}; "
-                    f"found: {list(fieldnames)}"
+                    f"Required column '{required}' not found in {path}; found: {list(fieldnames)}"
                 )
             normalized[required] = actual
 

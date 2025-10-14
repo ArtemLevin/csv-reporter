@@ -34,6 +34,7 @@ def test_registry_register_and_create_works(monkeypatch):
 
     class DummyReport(Report):
         NAME = "dummy"
+
         def generate(self, dataset: Dataset):  # pragma: no cover
             return []
 

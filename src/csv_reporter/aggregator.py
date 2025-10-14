@@ -27,6 +27,7 @@ from .model import BrandStats, Dataset, Product
 @dataclass(slots=True)
 class _Acc:
     """Внутренний аккумулятор для суммирования рейтингов по бренду."""
+
     sum_ratings: float = 0.0
     count: int = 0
 

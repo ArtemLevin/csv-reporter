@@ -1,32 +1,27 @@
-# CSV Rating Reporter — Makefile
-# Назначение:
-#   Удобные цели для разработки, тестирования, линтинга и сборки без активации venv.
-#   Везде используем интерпретатор из виртуального окружения (кроссплатформенно).
-#
 # Ключевые команды:
 #   make venv        — создать .venv
 #   make install     — установить проект (dev-зависимости)
 #   make format      — автоформатирование (ruff)
 #   make lint        — линтинг кода (ruff)
 #   make type        — проверка типов (mypy)
-#   make test        — pytest (быстро)
-#   make cov         — pytest с покрытием
-#   make check       — формат + линт + типы + тесты (быстрая проверка перед коммитом)
-#   make build       — сборка колеса/сдист (через `python -m build`)
-#   make run FILES="a.csv b.csv" [опции] — запуск CLI без установки в систему
+#   make test        — pytest (быстро)  ⟵ теперь зависит от install
+#   make cov         — pytest с покрытием ⟵ теперь зависит от install
+#   make check       — format + lint + type + test
+#   make build       — сборка wheel/sdist (через `python -m build`)
+#   make run FILES="a.csv b.csv" [SORT=.. LIMIT=.. TABLEFMT=.. REPORT=..] — запуск CLI
 #   make clean       — очистить временные артефакты
 #
-# Комментарии по дизайну:
-#   - Не активируем venv через `source`; запускаем инструменты через $(VENVPY) — надёжнее в CI/Windows.
+# Примечания:
+#   - Не активируем venv через `source`; вызываем $(VENVPY) напрямую — стабильно и для CI, и для Windows.
 #   - Цели идемпотентны: повторный `make install` безопасен.
-#   - Переменные можно переопределять: `make test PYTHON=python3.11`.
+#   - Переменные можно переопределять при вызове: `make test PYTHON=python3.11`.
 
 # --------------- Переменные окружения ---------------
 
 PYTHON ?= python3
 VENV   ?= .venv
 
-# Определяем путь к python внутри venv (кроссплатформенно)
+# Внутренний python в venv (кроссплатформенно)
 ifeq ($(OS),Windows_NT)
 	VENVPY := $(VENV)/Scripts/python.exe
 else
@@ -35,7 +30,7 @@ endif
 
 VENVPIP := $(VENVPY) -m pip
 
-# Параметры запуска CLI (можно переопределить при вызове):
+# Параметры CLI (можно переопределить при вызове make)
 REPORT   ?= average-rating
 SORT     ?= avg_rating
 LIMIT    ?=
@@ -55,10 +50,10 @@ help:
 	@echo "  format    - ruff format"
 	@echo "  lint      - ruff check"
 	@echo "  type      - mypy type checking"
-	@echo "  test      - run pytest quickly"
-	@echo "  cov       - run pytest with coverage"
+	@echo "  test      - run pytest (depends on install)"
+	@echo "  cov       - run pytest with coverage (depends on install)"
 	@echo "  check     - format + lint + type + test"
-	@echo "  build     - build wheel/sdist (ensures 'build' is installed)"
+	@echo "  build     - build wheel/sdist"
 	@echo "  run       - run CLI; pass FILES=\"a.csv b.csv\" and optional SORT/LIMIT/TABLEFMT/REPORT"
 	@echo "  clean     - remove caches/build artifacts"
 
@@ -70,7 +65,7 @@ venv:
 	@echo "Created venv at $(VENV)"
 	@$(VENVPIP) --version >/dev/null
 
-# Установка проекта + dev-зависимостей
+# Установка проекта + dev-зависимостей (editable)
 install: venv
 	@$(VENVPIP) install -U pip
 	@$(VENVPIP) install -e ".[dev]"
@@ -92,12 +87,12 @@ type: venv
 
 # --------------- Тесты ---------------
 
-# Быстрые тесты
-test: venv
+# Быстрые тесты — теперь зависят от install, чтобы гарантировать импорт пакета
+test: install
 	@$(VENVPY) -m pytest -q
 
-# Покрытие (порог задан в pyproject)
-cov: venv
+# Покрытие — также зависят от install
+cov: install
 	@$(VENVPY) -m pytest --cov=csv_reporter --cov-report=term-missing
 
 # Полный быстрый прогон качества
@@ -105,17 +100,17 @@ check: format lint type test
 
 # --------------- Сборка ---------------
 
-# Сборка колеса/сдист (локально)
-build: venv
+# Сборка wheel/sdist
+build: install
 	@$(VENVPIP) install -U build
 	@$(VENVPY) -m build
 
 # --------------- Запуск CLI (без установки в PATH) ---------------
 
-# Запуск напрямую через модуль, избегая зависимости от console_scripts.
+# Запуск через модуль — поддерживает все аргументы CLI, включая --tablefmt.
 # Пример:
-#   make run FILES="tests/fixtures/sample_ok.csv" SORT=brand LIMIT=10
-run: venv
+#   make run FILES="tests/fixtures/sample_ok.csv" SORT=brand LIMIT=10 TABLEFMT=simple
+run: install
 	@if [ -z "$(FILES)" ]; then \
 		echo "Error: please pass FILES=\"path1.csv path2.csv\""; exit 1; \
 	fi
@@ -132,5 +127,6 @@ clean:
 	  dist build \
 	  src/*.egg-info \
 	  src/*/*.egg-info \
-	  *.pyc __pycache__ **/__pycache__
+	  **/__pycache__ \
+	  *.pyc __pycache__
 	@echo "Cleaned build and cache artifacts"

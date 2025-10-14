@@ -106,4 +106,6 @@ def test_successful_run_prints_table(tmp_path: Path, capsys: pytest.CaptureFixtu
     assert "brand" in out and "avg_rating" in out and "items" in out
     assert "branda" in out  # нормализованный бренд в нижнем регистре
     assert "brandb" in out
-    assert "brandc" not in out or " 0 " not in out  # BrandC без валидных рейтингов не должен появляться
+    assert (
+        "brandc" not in out or " 0 " not in out
+    )  # BrandC без валидных рейтингов не должен появляться

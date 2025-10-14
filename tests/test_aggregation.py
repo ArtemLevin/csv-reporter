@@ -84,10 +84,12 @@ def test_compute_brand_avg_rating(rows, expected):
 
 def test_ignores_brands_without_valid_ratings():
     """Бренд без валидных рейтингов не должен появляться в выходном списке."""
-    ds = _mk_products([
-        ("n1", "emptybrand", 10.0, None),
-        ("n2", "ok", 11.0, 4.0),
-    ])
+    ds = _mk_products(
+        [
+            ("n1", "emptybrand", 10.0, None),
+            ("n2", "ok", 11.0, 4.0),
+        ]
+    )
     svc = AggregatorService()
     out = svc.compute_brand_avg_rating(ds)
     brands = {bs.brand for bs in out}
@@ -111,10 +113,12 @@ def test_no_sorting_side_effects():
     Проверяем, что AggregatorService не сортирует результат — порядок не гарантируется.
     Сортировка — ответственность presenter; здесь убеждаемся, что порядок может быть любым.
     """
-    ds = _mk_products([
-        ("n1", "b", 10.0, 4.0),
-        ("n2", "a", 11.0, 5.0),
-    ])
+    ds = _mk_products(
+        [
+            ("n1", "b", 10.0, 4.0),
+            ("n2", "a", 11.0, 5.0),
+        ]
+    )
     svc = AggregatorService()
     out = svc.compute_brand_avg_rating(ds)
 

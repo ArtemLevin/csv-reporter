@@ -191,5 +191,3 @@ def main() -> None:
     code = run()
     # Явно завершаем процесс — стандартный приём для CLI.
     raise SystemExit(code)
-
-
