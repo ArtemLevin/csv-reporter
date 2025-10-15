@@ -8,7 +8,8 @@
 ---
 ## Demo
 
-![Demo run](Demo_GIF.gif)
+![Demo run](./static/demo_01.png)
+![Demo test](./static/demo_02.png)
 
 ---
 
