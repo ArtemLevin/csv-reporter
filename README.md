@@ -1,11 +1,9 @@
-### `README.md`
-
-````markdown
 # CSV Rating Reporter
 
 Инструмент командной строки для объединения CSV-файлов и генерации отчёта по среднему рейтингу брендов.
 
 ---
+
 ## Demo
 
 ![Demo run](https://github.com/ArtemLevin/csv-reporter/blob/main/static/demo_01.png?raw=1)
@@ -19,7 +17,7 @@
 ```bash
 git clone https://github.com/ArtemLevin/csv-reporter.git
 cd csv-reporter
-````
+
 
 ### 2. Установка окружения и зависимостей
 
