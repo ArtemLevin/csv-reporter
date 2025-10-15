@@ -8,9 +8,8 @@
 ---
 ## Demo
 
-![Demo run](./static/demo_01.png)
-![Demo test](./static/demo_02.png)
-
+![Demo run](https://raw.githubusercontent.com/ArtemLevin/csv-reporter/main/static/demo_01.png)
+![Demo test](https://raw.githubusercontent.com/ArtemLevin/csv-reporter/main/static/demo_02.png)
 ---
 
 ## Быстрый запуск
